@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "credit-card-backend"
+version = "0.1.0"
+description = ""
+authors = ["Andrei Iaroshenko <dron777xs@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+wemake-python-styleguide = "^0.18.0"
+uvicorn = "^0.22.0"
+fastapi = { version = "*", python = ">=3.10,<3.12" }
+envparse = "^0.2.0"
+python-multipart = "^0.0.6"
+python-jose = "^3.3.0"
+httpx = "^0.24.1"
+h5py = { version = "*", python = ">=3.10,<3.12" }
+scipy = { version = "*", python = ">=3.10,<3.13" }
+tensorflow = "^2.13.0"
+tensorflow-io-gcs-filesystem = { version = "*", python = ">=3.10,<3.12" }
+deepface = { version = "*", python = ">=3.10,<3.12" }
+aiohttp = "^3.8.5"
+aiojobs = "^1.2.0"
+pytest-aiohttp = "^1.0.5"
+pytest-asyncio = "^0.21.1"
+aiokafka = "^0.8.1"
+opencv-python-headless = "^4.8.0.76"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

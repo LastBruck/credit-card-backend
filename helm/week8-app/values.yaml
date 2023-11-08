@@ -1,0 +1,86 @@
+# Default values for week8-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+authService:
+  replicaCount: "1"
+
+baseService:
+  replicaCount: "1"
+
+verifyService:
+  replicaCount: "1"
+
+global:
+  appHost: "0.0.0.0"
+  authPort: "24028"
+  basePort: "24128"
+  verifyPort: "24228"
+  kafkaHost: "kafka"
+  kafkaPort: "24328"
+  realDatabaseUrl: "postgresql+asyncpg://shift-postgres-test:shift-postgres-test@postgres.test.svc.cluster.local:5432/postgres"
+  resources:
+    limits:
+      cpu: "100m"
+      memory: "800Mi"

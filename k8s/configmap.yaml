@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iaroshenko-config
+data:
+  app_host: "172.18.0.1"
+  kafka_host: "kafka"
+  app_auth_port: "24028"
+  app_base_port: "24128"
+  app_verify_port: "24228"
+  kafka_port: "24328"
+  real_database_url: "postgresql+asyncpg://shift-postgres-test:shift-postgres-test@postgres.test.svc.cluster.local:5432/postgres"

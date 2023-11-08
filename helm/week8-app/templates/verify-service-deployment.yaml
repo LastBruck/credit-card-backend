@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-verify-service-deployment
+spec:
+  replicas: {{ .Values.verifyService.replicaCount }}
+  selector:
+    matchLabels:
+      app: verify-service-app
+  template:
+    metadata:
+      labels:
+        app: verify-service-app
+    spec:
+      containers:
+        - name: verify-service-container
+          image: registry.gitlab.com/shift-python/y2023/homeworks/yaroshenko-as/week8/verify-service-app:latest
+          ports:
+            - containerPort: {{ .Values.global.verifyPort }}
+          env:
+            - name: APP_HOST
+              value: {{ .Values.global.appHost }}
+            - name: KAFKA_HOST
+              value: {{ .Values.global.kafkaHost }}
+            - name: KAFKA_PORT
+              value: {{ .Values.global.kafkaPort }}
+            - name: APP_VERIFY_PORT
+              value: {{ .Values.global.verifyPort }}
+            - name: APP_BASE_PORT
+              value: {{ .Values.global.basePort }}
+            - name: REAL_DATABASE_URL
+              value: {{ .Values.global.realDatabaseUrl }}
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db_username
+                  name: {{ .Release.Name }}-secret
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db_password
+                  name: {{ .Release.Name }}-secret
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.global.verifyPort  }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.global.verifyPort  }}
+          resources:
+            limits:
+              cpu: {{ .Values.global.resources.limits.cpu }}
+              memory: {{ .Values.global.resources.limits.memory }}

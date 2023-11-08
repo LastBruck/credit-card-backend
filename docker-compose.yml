@@ -1,0 +1,179 @@
+version: "3.8"
+
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - custom
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mymail.ru
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - 80:80
+    networks:
+      - custom
+    restart: unless-stopped
+
+  zookeeper:
+    container_name: zookeeper_container
+    image: bitnami/zookeeper:latest
+    ports:
+      - 2181:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - custom
+
+  kafka:
+    container_name: kafka_container
+    image: bitnami/kafka:latest
+    ports:
+      - 24328:24328
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:24328
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:24328
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:24328
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:24328
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zookeeper
+    networks:
+      - custom
+
+  create-topics:
+    container_name: kafka_create_topics
+    image: bitnami/kafka:latest
+    depends_on:
+      - kafka
+    command: >
+      bash -c "sleep 10 &&
+      kafka-topics.sh --create --topic verify_req --bootstrap-server kafka:24328 &&
+      kafka-topics.sh --create --topic verify_res --bootstrap-server kafka:24328"
+    networks:
+      - custom
+
+  auth_service_app:
+    container_name: auth_service_app
+    image: auth_service_app
+    environment:
+      APP_HOST: "172.18.0.1"
+      KAFKA_HOST: "kafka"
+      KAFKA_PORT: 24328
+      APP_AUTH_PORT: 24028
+      REAL_DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/postgres"
+    build:
+      context: ./
+      dockerfile: auth_service/Dockerfile
+    volumes:
+      - ./shared_photos:/shared_photos
+    ports:
+      - 24028:24028
+    depends_on:
+      - kafka
+    networks:
+      - custom
+    restart: unless-stopped
+
+  base_service_app:
+    container_name: base_service_app
+    image: base_service_app
+    environment:
+      APP_HOST: "172.18.0.1"
+      APP_BASE_PORT: 24128
+      REAL_DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/postgres"
+    build:
+      context: ./
+      dockerfile: base_service/Dockerfile
+    ports:
+      - 24128:24128
+    networks:
+      - custom
+
+  verify_service_app:
+    container_name: verify_service_app
+    image: verify_service_app
+    environment:
+      APP_HOST: "172.18.0.1"
+      KAFKA_HOST: "kafka"
+      KAFKA_PORT: 24328
+      APP_BASE_PORT: 24128
+      APP_VERIFY_PORT: 24228
+      KAFKA_TOPICS: verify
+    build:
+      context: ./
+      dockerfile: verify_service/Dockerfile
+    volumes:
+      - ./shared_photos:/shared_photos
+    ports:
+      - 24228:24228
+    depends_on:
+      - kafka
+    networks:
+      - custom
+    restart: unless-stopped
+
+  alembic_auth_migrations:
+    container_name: alembic_auth_migrations
+    image: alembic_auth_migrations
+    command: ./migrate.sh
+    depends_on:
+      - postgres
+    environment:
+      ALEMBIC_DATABASE_URL: "postgresql://postgres:postgres@postgres/postgres"
+      REAL_DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/postgres"
+    build:
+      context: ./
+      dockerfile: auth_service/Dockerfile
+    ports:
+      - 8001:8001
+    networks:
+      - custom
+
+  alembic_base_migrations:
+    container_name: alembic_base_migrations
+    image: alembic_base_migrations
+    command: ./migrate.sh
+    depends_on:
+      - postgres
+    environment:
+      ALEMBIC_DATABASE_URL: "postgresql://postgres:postgres@postgres/postgres"
+      REAL_DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres:5432/postgres"
+    build:
+      context: ./
+      dockerfile: base_service/Dockerfile
+    ports:
+      - 8002:8002
+    networks:
+      - custom
+
+networks:
+  custom:
+    driver: bridge
+
+volumes:
+  auth_service_app:
+  verify_service_app:
+  postgres:
+  pgadmin:

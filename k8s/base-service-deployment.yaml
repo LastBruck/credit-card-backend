@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iaroshenko-base-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: base-service-app
+  template:
+    metadata:
+      name: base-service-pod
+      labels:
+        app: base-service-app
+    spec:
+      containers:
+        - name: base-service-container
+          image: registry.gitlab.com/shift-python/y2023/homeworks/yaroshenko-as/week8/base-service-app:latest
+          ports:
+            - containerPort: 24128
+          env:
+            - name: APP_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: app_host
+                  name: iaroshenko-config
+            - name: KAFKA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: kafka_host
+                  name: iaroshenko-config
+            - name: KAFKA_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: kafka_port
+                  name: iaroshenko-config
+            - name: APP_BASE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: app_base_port
+                  name: iaroshenko-config
+            - name: APP_VERIFY_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: app_verify_port
+                  name: iaroshenko-config
+            - name: REAL_DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: real_database_url
+                  name: iaroshenko-config
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db_username
+                  name: iaroshenko-secret
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db_password
+                  name: iaroshenko-secret
+          livenessProbe:
+            tcpSocket:
+              port: 24128
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 24128
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 100m
+              memory: 800Mi

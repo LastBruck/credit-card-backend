@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-base-service-deployment
+spec:
+  replicas: {{ .Values.baseService.replicaCount }}
+  selector:
+    matchLabels:
+      app: base-service-app
+  template:
+    metadata:
+      labels:
+        app: base-service-app
+    spec:
+      containers:
+        - name: base-service-container
+          image: registry.gitlab.com/shift-python/y2023/homeworks/yaroshenko-as/week8/base-service-app:latest
+          ports:
+            - containerPort: {{ .Values.global.basePort }}
+          env:
+            - name: APP_HOST
+              value: {{ .Values.global.appHost }}
+            - name: KAFKA_HOST
+              value: {{ .Values.global.kafkaHost }}
+            - name: KAFKA_PORT
+              value: {{ .Values.global.kafkaPort }}
+            - name: APP_BASE_PORT
+              value: {{ .Values.global.basePort }}
+            - name: REAL_DATABASE_URL
+              value: {{ .Values.global.realDatabaseUrl }}
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db_username
+                  name: {{ .Release.Name }}-secret
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db_password
+                  name: {{ .Release.Name }}-secret
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.global.basePort  }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.global.basePort  }}
+          resources:
+            limits:
+              cpu: {{ .Values.global.resources.limits.cpu }}
+              memory: {{ .Values.global.resources.limits.memory }}

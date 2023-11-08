@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-auth-service-deployment
+spec:
+  replicas: {{ .Values.authService.replicaCount }}
+  selector:
+    matchLabels:
+      app: auth-service-app
+  template:
+    metadata:
+      labels:
+        app: auth-service-app
+    spec:
+      containers:
+        - name: auth-service-container
+          image: registry.gitlab.com/shift-python/y2023/homeworks/yaroshenko-as/week8/auth-service-app:latest
+          ports:
+            - containerPort: {{ .Values.global.authPort }}
+          env:
+            - name: APP_HOST
+              value: {{ .Values.global.appHost }}
+            - name: KAFKA_HOST
+              value: {{ .Values.global.kafkaHost }}
+            - name: KAFKA_PORT
+              value: {{ .Values.global.kafkaPort }}
+            - name: APP_AUTH_PORT
+              value: {{ .Values.global.authPort }}
+            - name: APP_BASE_PORT
+              value: {{ .Values.global.basePort }}
+            - name: REAL_DATABASE_URL
+              value: {{ .Values.global.realDatabaseUrl }}
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db_username
+                  name: {{ .Release.Name }}-secret
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db_password
+                  name: {{ .Release.Name }}-secret
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.global.authPort  }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.global.authPort  }}
+          resources:
+            limits:
+              cpu: {{ .Values.global.resources.limits.cpu }}
+              memory: {{ .Values.global.resources.limits.memory }}

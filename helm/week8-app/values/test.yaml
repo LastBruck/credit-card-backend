@@ -1,0 +1,12 @@
+global:
+  appHost: "0.0.0.0"
+  authPort: "24028"
+  basePort: "24128"
+  verifyPort: "24228"
+  kafkaHost: "kafka"
+  kafkaPort: "24328"
+  realDatabaseUrl: "postgresql+asyncpg://shift-postgres-test:shift-postgres-test@postgres.test.svc.cluster.local:5432/postgres"
+  resources:
+    limits:
+      cpu: 80m
+      memory: 80Mi
