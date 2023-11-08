@@ -12,6 +12,7 @@
 - **psycopg2-binary** = "2.9.9"
 - **alembic** = "1.12.1"
 - **asyncpg** = "0.28.0"
+- **deepface**
 
 ## Запуск docker-compose:
 
